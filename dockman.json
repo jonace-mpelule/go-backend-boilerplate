@@ -1,0 +1,30 @@
+{
+  "schema_version": 2,
+  "image": "go-backend",
+  "run": {
+    "env": null,
+    "env_file": ".env",
+    "args": "--rm -d",
+    "auto_port": true,
+    "name": "go-backend",
+    "zero_downtime": true,
+    "readiness": "healthcheck"
+  },
+  "build": {
+    "context": ".",
+    "dockerfile": "Dockerfile",
+    "tag": "go-backend",
+    "env": null,
+    "args": null,
+    "secrets": null,
+    "ssh": null,
+    "buildkit": true,
+    "cache_from": null,
+    "cache_to": null,
+    "target": "",
+    "platform": "",
+    "no_cache": null,
+    "pull": null,
+    "extra_args": ""
+  }
+}
