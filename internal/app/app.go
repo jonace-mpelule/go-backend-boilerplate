@@ -1,9 +1,12 @@
 package app
 
 import (
+	"errors"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/username/project-name/internal/config"
 	analyticsplatform "github.com/username/project-name/internal/platform/analytics"
+	"github.com/username/project-name/internal/platform/cache"
 	"github.com/username/project-name/internal/platform/db"
 	"github.com/username/project-name/internal/platform/logger"
 	sentryplatform "github.com/username/project-name/internal/platform/sentry"
@@ -27,9 +30,14 @@ func New() (*App, error) {
 		return nil, err
 	}
 
-	dbClient, err := db.New(cfg.DBUrl)
+	dbClient, err := db.New(cfg.DBUrl, cfg)
 	if err != nil {
 		return nil, err
+	}
+
+	redis := cache.NewRedis(cfg.RedisUrl)
+	if redis == nil {
+		return nil, errors.New("Redis client failed to connect")
 	}
 
 	if err := sentryplatform.Init(
@@ -58,6 +66,7 @@ func New() (*App, error) {
 		DB:        dbClient,
 		Logger:    log,
 		Analytics: analytics,
+		Cache:     redis,
 	}
 
 	router := chi.NewRouter()

@@ -9,7 +9,7 @@ type Module struct {
 }
 
 func NewModule(container *types.Container) *Module {
-	repo := NewRepository(container.DB)
+	repo := NewRepository(container.DB, container.Cache)
 
 	service := NewService(repo, container.Analytics)
 

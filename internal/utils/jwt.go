@@ -12,7 +12,9 @@ type JWT struct {
 }
 
 type Claims struct {
-	UserID string
+	UserID      string   `json:"user_id"`
+	Role        string   `json:"role"`
+	Permissions []string `json:"permissions"`
 	jwt.RegisteredClaims
 }
 

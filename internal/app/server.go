@@ -1,8 +1,13 @@
 package app
 
 import (
+	"context"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -45,9 +50,38 @@ func NewServer(
 
 func (s *Server) Start() error {
 	addr := ":" + s.cfg.Port
-	log.Default().Print("Server Running On ", addr)
 
-	return http.ListenAndServe(addr, s.router)
+	server := &http.Server{
+		Addr:    addr,
+		Handler: s.router,
+	}
+
+	go func() {
+		log.Default().Print("Server Running On ", addr)
+		if err := server.ListenAndServe(); err != nil &&
+			err != http.ErrServerClosed {
+			panic(err)
+		}
+	}()
+
+	stop := make(chan os.Signal, 1)
+
+	signal.Notify(
+		stop,
+		os.Interrupt,
+		syscall.SIGTERM,
+	)
+
+	<-stop
+
+	ctx, cancel := context.WithTimeout(
+		context.Background(),
+		10*time.Second,
+	)
+
+	defer cancel()
+
+	return server.Shutdown(ctx)
 }
 
 func (s *Server) registerMiddleware() {
