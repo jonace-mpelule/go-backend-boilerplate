@@ -11,8 +11,9 @@ type Config struct {
 	Port  string `validate:"required,numeric"`
 	DBUrl string `validate:"required,url"`
 
-	SentryDSN  string
-	PosthogKey string
+	SentryDSN   string
+	PosthogKey  string
+	PosthogHost string `validate:"omitempty,url"`
 }
 
 func Load() (*Config, error) {
@@ -23,6 +24,10 @@ func Load() (*Config, error) {
 		DBUrl:      getEnv("DATABASE_URL", ""),
 		SentryDSN:  getEnv("SENTRY_DSN", ""),
 		PosthogKey: getEnv("POSTHOG_KEY", ""),
+		PosthogHost: getEnv(
+			"POSTHOG_HOST",
+			"https://app.posthog.com",
+		),
 	}
 	if err := cfg.validate(); err != nil {
 		return nil, err
