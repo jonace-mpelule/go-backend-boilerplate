@@ -17,6 +17,7 @@ A production-oriented Go backend template for modular monoliths built with Chi, 
 - Prometheus metrics endpoint for scrape-based monitoring
 - Optional direct Loki log shipping for external Grafana/Loki stacks
 - Resend as the default transactional email provider
+- Swaggo-based API documentation generated from code annotations
 
 ## Project Layout
 
@@ -126,6 +127,21 @@ make migrate-apply
 - `GET /health/ready` for readiness
 - `GET /health` as a readiness alias
 
+## API Documentation
+
+This template uses Swaggo to generate Swagger 2.0 documentation directly from code annotations.
+
+- Generate the docs:
+
+```bash
+make openapi
+```
+
+- Open Swagger UI at `GET /docs`
+- The generated JSON spec is served at `GET /docs/doc.json`
+
+When you add or change handlers or DTOs, regenerate the docs so the committed spec stays in sync with the code.
+
 ## Observability
 
 This template supports a portable observability layout:
@@ -174,6 +190,7 @@ By default the included Prometheus config scrapes `host.docker.internal:8080`, s
 | `make build` | Build the binary into `bin/server` |
 | `make test` | Run the test suite |
 | `make ent` | Regenerate Ent client code |
+| `make openapi` | Regenerate Swagger docs with Swaggo |
 | `make migrate-diff name=...` | Create a new Atlas migration using `ATLAS_DIFF_DATABASE_URL` |
 | `make migrate-status` | Show Atlas migration status for `DATABASE_URL` |
 | `make migrate-apply` | Apply Atlas migrations to `DATABASE_URL` |

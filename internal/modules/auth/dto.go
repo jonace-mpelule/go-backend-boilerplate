@@ -48,9 +48,9 @@ type RefreshSessionRecord struct {
 }
 
 type TokenPairResponse struct {
-	AccessToken  string        `json:"access_token"`
-	RefreshToken string        `json:"refresh_token"`
-	ExpiresIn    time.Duration `json:"expires_in"`
+	AccessToken  string        `json:"access_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
+	RefreshToken string        `json:"refresh_token" example:"refresh-token-value"`
+	ExpiresIn    time.Duration `json:"expires_in" swaggertype:"integer" example:"3600"`
 }
 
 type AuthResponse struct {

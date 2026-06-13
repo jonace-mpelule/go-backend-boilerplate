@@ -10,13 +10,14 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 	"github.com/username/project-name/internal/config"
 	"github.com/username/project-name/internal/middlewares"
-	"github.com/username/project-name/internal/modules/auth"
 	"github.com/username/project-name/internal/modules"
+	"github.com/username/project-name/internal/modules/auth"
 	"github.com/username/project-name/internal/modules/health"
 	"github.com/username/project-name/internal/modules/users"
-	platformdocs "github.com/username/project-name/internal/platform/docs"
+	_ "github.com/username/project-name/internal/platform/docs"
 	"github.com/username/project-name/internal/types"
 	"go.uber.org/zap"
 )
@@ -100,8 +101,14 @@ func (s *Server) registerUtilityRoutes() {
 	if s.container.Metrics != nil && s.container.Metrics.Enabled() {
 		s.router.Handle(s.container.Metrics.Path(), s.container.Metrics.Handler())
 	}
-	s.router.Get("/openapi.json", platformdocs.OpenAPIHandler())
-	s.router.Get("/docs", platformdocs.UIHandler())
+	s.router.Get("/docs", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/docs/index.html", http.StatusTemporaryRedirect)
+	})
+	s.router.Get("/docs/*", httpSwagger.Handler(
+		httpSwagger.URL("/docs/doc.json"),
+		httpSwagger.DocExpansion("none"),
+		httpSwagger.DeepLinking(true),
+	))
 }
 
 func (s *Server) registerModules() {

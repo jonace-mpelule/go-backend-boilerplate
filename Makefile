@@ -4,7 +4,7 @@ ATLAS_SCHEMA_URL := ent://ent/schema
 OBSERVABILITY_COMPOSE_FILE := deployments/observability/docker-compose.yml
 APP_STACK_COMPOSE_FILE := deployments/app/docker-compose.yml
 
-.PHONY: run dev build test ent openapi lint fmt check-template migrate-diff migrate-status migrate-apply observability-up observability-down observability-logs app-stack-up app-stack-down app-stack-logs seed-admin
+.PHONY: run dev build test ent ent-gen openapi lint fmt check-template migrate-diff migrate-status migrate-apply observability-up observability-down observability-logs app-stack-up app-stack-down app-stack-logs seed-admin
 
 run:
 	go run ./cmd/server
@@ -19,11 +19,13 @@ build:
 test:
 	go test ./...
 
+ent: ent-gen
+
 ent-gen:
 	go generate ./ent
 
 openapi:
-	go run ./cmd/openapi
+	go run github.com/swaggo/swag/cmd/swag init --parseInternal -g main.go -d cmd/server,internal/modules/auth,internal/modules/health,internal/modules/users,internal/response -o internal/platform/docs
 
 lint:
 	golangci-lint run ./...
