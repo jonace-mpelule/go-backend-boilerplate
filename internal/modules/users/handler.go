@@ -3,34 +3,24 @@ package users
 import (
 	"net/http"
 
-	"github.com/go-chi/render"
+	apperrors "github.com/username/project-name/internal/errors"
+	"github.com/username/project-name/internal/response"
 )
 
 type Handler struct {
-	service *Service
+	service ServiceContract
 }
 
-func NewHandler(service *Service) *Handler {
-	return &Handler{
-		service: service,
-	}
+func NewHandler(service ServiceContract) *Handler {
+	return &Handler{service: service}
 }
 
-func (h *Handler) GetUsers(
-	w http.ResponseWriter,
-	r *http.Request,
-) {
-	users, err := h.service.GetAllUsers(r.Context())
-
+func (h *Handler) ListUsers(w http.ResponseWriter, r *http.Request) {
+	users, err := h.service.ListUsers(r.Context())
 	if err != nil {
-		render.Status(r, http.StatusInternalServerError)
-		render.JSON(w, r, map[string]string{
-			"message": "ok",
-		})
+		response.Error(w, r, apperrors.Internal("failed to list users"))
+		return
 	}
 
-	render.Status(r, http.StatusOK)
-	render.JSON(w, r, map[string]any{
-		"data": users,
-	})
+	response.Success(w, r, http.StatusOK, users)
 }

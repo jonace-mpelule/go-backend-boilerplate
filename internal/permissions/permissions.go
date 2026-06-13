@@ -43,3 +43,31 @@ const (
 	// Admin permissions
 	AdminAccess = "admin:access"
 )
+
+func All() []string {
+	return []string{
+		UserRead,
+		UserCreate,
+		UserUpdate,
+		UserDelete,
+		AuthLogin,
+		AuthLogout,
+		RoleRead,
+		RoleCreate,
+		RoleUpdate,
+		RoleDelete,
+		PermissionRead,
+		PermissionAssign,
+		BillingRead,
+		BillingCreate,
+		BillingUpdate,
+		BillingDelete,
+		AnalyticsRead,
+		FileUpload,
+		FileRead,
+		FileDelete,
+		SettingsRead,
+		SettingsUpdate,
+		AdminAccess,
+	}
+}

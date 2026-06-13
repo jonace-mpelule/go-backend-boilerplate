@@ -1,15 +1,15 @@
 package analytics
 
-type NoopAnalytics struct {
-}
+import "context"
 
-func NewNoop() *NoopAnalytics {
+type NoopAnalytics struct{}
+
+func NewNoop() Analytics {
 	return &NoopAnalytics{}
 }
 
-func (n *NoopAnalytics) Track(
-	event string,
-	properties map[string]any,
-) {
+func (n *NoopAnalytics) Track(context.Context, string, map[string]any) {}
 
+func (n *NoopAnalytics) Close() error {
+	return nil
 }

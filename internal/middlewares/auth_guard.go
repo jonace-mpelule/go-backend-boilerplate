@@ -5,67 +5,51 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/golang-jwt/jwt/v5"
+	apperrors "github.com/username/project-name/internal/errors"
+	"github.com/username/project-name/internal/response"
+	"github.com/username/project-name/internal/utils"
 )
 
 type contextKey string
 
 const UserContextKey contextKey = "user"
 
-func AuthGuard(secret string) func(http.Handler) http.Handler {
+type TokenVerifier interface {
+	Verify(tokenString string) (*utils.Claims, error)
+}
+
+func AuthGuard(jwtHelper TokenVerifier) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(
-			w http.ResponseWriter,
-			r *http.Request,
-		) {
-
-			authHeader := r.Header.Get(
-				"Authorization",
-			)
-
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			authHeader := r.Header.Get("Authorization")
 			if authHeader == "" {
-				http.Error(
-					w,
-					"unauthorized",
-					http.StatusUnauthorized,
-				)
+				response.Error(w, r, apperrors.Unauthorized("missing authorization header"))
 				return
 			}
 
-			tokenString := strings.TrimPrefix(
-				authHeader,
-				"Bearer ",
-			)
-
-			token, err := jwt.Parse(
-				tokenString,
-				func(token *jwt.Token) (
-					any,
-					error,
-				) {
-					return []byte(secret), nil
-				},
-			)
-
-			if err != nil || !token.Valid {
-				http.Error(
-					w,
-					"invalid token",
-					http.StatusUnauthorized,
-				)
+			tokenString, ok := strings.CutPrefix(authHeader, "Bearer ")
+			if !ok || tokenString == "" {
+				response.Error(w, r, apperrors.Unauthorized("invalid authorization header"))
 				return
 			}
 
-			ctx := context.WithValue(
-				r.Context(),
-				UserContextKey,
-				token.Claims,
-			)
+			claims, err := jwtHelper.Verify(tokenString)
+			if err != nil {
+				response.Error(w, r, apperrors.Unauthorized("invalid token"))
+				return
+			}
 
-			next.ServeHTTP(
-				w,
-				r.WithContext(ctx),
-			)
+			ctx := context.WithValue(r.Context(), UserContextKey, claims)
+			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
+}
+
+func ClaimsFromContext(ctx context.Context) (*utils.Claims, bool) {
+	claims, ok := ctx.Value(UserContextKey).(*utils.Claims)
+	return claims, ok
+}
+
+func ContextWithClaims(ctx context.Context, claims *utils.Claims) context.Context {
+	return context.WithValue(ctx, UserContextKey, claims)
 }

@@ -212,6 +212,7 @@ Rules:
 - Use mocks for cache, DB, external services
 - Avoid testing implementation details
 - Focus on behavior
+- Keep all test files under the top-level `tests/` directory; do NOT place `_test.go` files alongside source files inside `internal/`, `cmd/`, or other production code directories
 
 ---
 

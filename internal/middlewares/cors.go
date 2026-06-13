@@ -1,29 +1,18 @@
 package middlewares
 
-import "github.com/go-chi/cors"
+import (
+	"net/http"
 
-func CORS() *cors.Cors {
+	"github.com/go-chi/cors"
+	"github.com/username/project-name/internal/config"
+)
 
-	return cors.New(cors.Options{
-		AllowedOrigins: []string{
-			"http://localhost:3000",
-		},
-
-		AllowedMethods: []string{
-			"GET",
-			"POST",
-			"PUT",
-			"DELETE",
-			"OPTIONS",
-		},
-
-		AllowedHeaders: []string{
-			"Accept",
-			"Authorization",
-			"Content-Type",
-		},
-
-		AllowCredentials: true,
-		MaxAge:           300,
+func CORS(cfg config.CORSConfig) func(http.Handler) http.Handler {
+	return cors.Handler(cors.Options{
+		AllowedOrigins:   cfg.AllowedOrigins,
+		AllowedMethods:   cfg.AllowedMethods,
+		AllowedHeaders:   cfg.AllowedHeaders,
+		AllowCredentials: cfg.AllowCredentials,
+		MaxAge:           cfg.MaxAge,
 	})
 }

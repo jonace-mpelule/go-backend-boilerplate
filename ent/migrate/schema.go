@@ -8,11 +8,41 @@ import (
 )
 
 var (
+	// RefreshSessionsColumns holds the columns for the "refresh_sessions" table.
+	RefreshSessionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString},
+		{Name: "token_hash", Type: field.TypeString, Unique: true},
+		{Name: "expires_at", Type: field.TypeTime},
+		{Name: "revoked_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "user_id", Type: field.TypeString},
+	}
+	// RefreshSessionsTable holds the schema information for the "refresh_sessions" table.
+	RefreshSessionsTable = &schema.Table{
+		Name:       "refresh_sessions",
+		Columns:    RefreshSessionsColumns,
+		PrimaryKey: []*schema.Column{RefreshSessionsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "refresh_sessions_users_refresh_sessions",
+				Columns:    []*schema.Column{RefreshSessionsColumns[6]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
-		{Name: "email", Type: field.TypeString},
-		{Name: "password", Type: field.TypeString},
+		{Name: "email", Type: field.TypeString, Unique: true},
+		{Name: "password_hash", Type: field.TypeString},
+		{Name: "role", Type: field.TypeString, Default: "user"},
+		{Name: "permissions", Type: field.TypeJSON},
+		{Name: "reset_token_hash", Type: field.TypeString, Nullable: true},
+		{Name: "reset_token_expires_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
@@ -22,9 +52,11 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		RefreshSessionsTable,
 		UsersTable,
 	}
 )
 
 func init() {
+	RefreshSessionsTable.ForeignKeys[0].RefTable = UsersTable
 }

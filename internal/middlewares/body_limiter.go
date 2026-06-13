@@ -10,11 +10,7 @@ func BodyLimiter(
 			w http.ResponseWriter,
 			r *http.Request,
 		) {
-			r.Body = http.MaxBytesReader(
-				w,
-				r.Body,
-				maxBytes,
-			)
+			r.Body = http.MaxBytesReader(w, r.Body, maxBytes)
 			next.ServeHTTP(w, r)
 		})
 	}

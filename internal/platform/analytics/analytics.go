@@ -1,8 +1,8 @@
 package analytics
 
-type Analtics interface {
-	Track(
-		event string,
-		properties map[string]any,
-	)
+import "context"
+
+type Analytics interface {
+	Track(ctx context.Context, event string, properties map[string]any)
+	Close() error
 }

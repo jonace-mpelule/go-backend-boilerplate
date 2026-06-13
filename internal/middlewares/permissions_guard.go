@@ -3,7 +3,8 @@ package middlewares
 import (
 	"net/http"
 
-	"github.com/username/project-name/internal/utils"
+	apperrors "github.com/username/project-name/internal/errors"
+	"github.com/username/project-name/internal/response"
 )
 
 type PermissionMode int
@@ -13,23 +14,12 @@ const (
 	RequireAny
 )
 
-func RequirePermission(
-	mode PermissionMode,
-	required ...string,
-) func(http.Handler) http.Handler {
-
+func RequirePermission(mode PermissionMode, required ...string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
-
-		return http.HandlerFunc(func(
-			w http.ResponseWriter,
-			r *http.Request,
-		) {
-
-			claims, ok := r.Context().
-				Value(UserContextKey).(*utils.Claims)
-
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			claims, ok := ClaimsFromContext(r.Context())
 			if !ok {
-				http.Error(w, "unauthorized", http.StatusUnauthorized)
+				response.Error(w, r, apperrors.Unauthorized("missing auth context"))
 				return
 			}
 
@@ -38,33 +28,30 @@ func RequirePermission(
 				return
 			}
 
-			userPerms := make(map[string]bool)
-
-			for _, p := range claims.Permissions {
-				userPerms[p] = true
+			userPerms := make(map[string]bool, len(claims.Permissions))
+			for _, permission := range claims.Permissions {
+				userPerms[permission] = true
 			}
 
 			switch mode {
-
 			case RequireAll:
-				for _, p := range required {
-					if !userPerms[p] {
-						http.Error(w, "forbidden", http.StatusForbidden)
+				for _, permission := range required {
+					if !userPerms[permission] {
+						response.Error(w, r, apperrors.Forbidden("missing required permission"))
 						return
 					}
 				}
 				next.ServeHTTP(w, r)
-
 			case RequireAny:
-
-				for _, p := range required {
-					if userPerms[p] {
+				for _, permission := range required {
+					if userPerms[permission] {
 						next.ServeHTTP(w, r)
 						return
 					}
 				}
-
-				http.Error(w, "forbidden", http.StatusForbidden)
+				response.Error(w, r, apperrors.Forbidden("missing required permission"))
+			default:
+				response.Error(w, r, apperrors.Forbidden("invalid permission mode"))
 			}
 		})
 	}

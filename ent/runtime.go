@@ -3,6 +3,9 @@
 package ent
 
 import (
+	"time"
+
+	"github.com/username/project-name/ent/refreshsession"
 	"github.com/username/project-name/ent/schema"
 	"github.com/username/project-name/ent/user"
 )
@@ -11,8 +14,42 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	refreshsessionFields := schema.RefreshSession{}.Fields()
+	_ = refreshsessionFields
+	// refreshsessionDescCreatedAt is the schema descriptor for created_at field.
+	refreshsessionDescCreatedAt := refreshsessionFields[5].Descriptor()
+	// refreshsession.DefaultCreatedAt holds the default value on creation for the created_at field.
+	refreshsession.DefaultCreatedAt = refreshsessionDescCreatedAt.Default.(func() time.Time)
+	// refreshsessionDescUpdatedAt is the schema descriptor for updated_at field.
+	refreshsessionDescUpdatedAt := refreshsessionFields[6].Descriptor()
+	// refreshsession.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	refreshsession.DefaultUpdatedAt = refreshsessionDescUpdatedAt.Default.(func() time.Time)
+	// refreshsession.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	refreshsession.UpdateDefaultUpdatedAt = refreshsessionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// refreshsessionDescID is the schema descriptor for id field.
+	refreshsessionDescID := refreshsessionFields[0].Descriptor()
+	// refreshsession.DefaultID holds the default value on creation for the id field.
+	refreshsession.DefaultID = refreshsessionDescID.Default.(func() string)
 	userFields := schema.User{}.Fields()
 	_ = userFields
+	// userDescRole is the schema descriptor for role field.
+	userDescRole := userFields[3].Descriptor()
+	// user.DefaultRole holds the default value on creation for the role field.
+	user.DefaultRole = userDescRole.Default.(string)
+	// userDescPermissions is the schema descriptor for permissions field.
+	userDescPermissions := userFields[4].Descriptor()
+	// user.DefaultPermissions holds the default value on creation for the permissions field.
+	user.DefaultPermissions = userDescPermissions.Default.([]string)
+	// userDescCreatedAt is the schema descriptor for created_at field.
+	userDescCreatedAt := userFields[7].Descriptor()
+	// user.DefaultCreatedAt holds the default value on creation for the created_at field.
+	user.DefaultCreatedAt = userDescCreatedAt.Default.(func() time.Time)
+	// userDescUpdatedAt is the schema descriptor for updated_at field.
+	userDescUpdatedAt := userFields[8].Descriptor()
+	// user.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	user.DefaultUpdatedAt = userDescUpdatedAt.Default.(func() time.Time)
+	// user.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	user.UpdateDefaultUpdatedAt = userDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// userDescID is the schema descriptor for id field.
 	userDescID := userFields[0].Descriptor()
 	// user.DefaultID holds the default value on creation for the id field.

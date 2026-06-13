@@ -3,18 +3,22 @@ package health
 import (
 	"net/http"
 
-	"github.com/go-chi/render"
+	"github.com/username/project-name/internal/response"
 )
 
-type Handler struct{}
-
-func NewHandler() *Handler {
-	return &Handler{}
+type Handler struct {
+	service *Service
 }
 
-func (h *Handler) Health(w http.ResponseWriter, r *http.Request) {
-	render.Status(r, http.StatusOK)
-	render.JSON(w, r, map[string]string{
-		"message": "ok",
-	})
+func NewHandler(service *Service) *Handler {
+	return &Handler{service: service}
+}
+
+func (h *Handler) Live(w http.ResponseWriter, r *http.Request) {
+	response.Success(w, r, http.StatusOK, h.service.Live())
+}
+
+func (h *Handler) Ready(w http.ResponseWriter, r *http.Request) {
+	status, payload := h.service.Ready(r.Context())
+	response.Success(w, r, status, payload)
 }

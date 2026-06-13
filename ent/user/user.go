@@ -3,7 +3,10 @@
 package user
 
 import (
+	"time"
+
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -13,17 +16,44 @@ const (
 	FieldID = "id"
 	// FieldEmail holds the string denoting the email field in the database.
 	FieldEmail = "email"
-	// FieldPassword holds the string denoting the password field in the database.
-	FieldPassword = "password"
+	// FieldPasswordHash holds the string denoting the password_hash field in the database.
+	FieldPasswordHash = "password_hash"
+	// FieldRole holds the string denoting the role field in the database.
+	FieldRole = "role"
+	// FieldPermissions holds the string denoting the permissions field in the database.
+	FieldPermissions = "permissions"
+	// FieldResetTokenHash holds the string denoting the reset_token_hash field in the database.
+	FieldResetTokenHash = "reset_token_hash"
+	// FieldResetTokenExpiresAt holds the string denoting the reset_token_expires_at field in the database.
+	FieldResetTokenExpiresAt = "reset_token_expires_at"
+	// FieldCreatedAt holds the string denoting the created_at field in the database.
+	FieldCreatedAt = "created_at"
+	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
+	FieldUpdatedAt = "updated_at"
+	// EdgeRefreshSessions holds the string denoting the refresh_sessions edge name in mutations.
+	EdgeRefreshSessions = "refresh_sessions"
 	// Table holds the table name of the user in the database.
 	Table = "users"
+	// RefreshSessionsTable is the table that holds the refresh_sessions relation/edge.
+	RefreshSessionsTable = "refresh_sessions"
+	// RefreshSessionsInverseTable is the table name for the RefreshSession entity.
+	// It exists in this package in order to avoid circular dependency with the "refreshsession" package.
+	RefreshSessionsInverseTable = "refresh_sessions"
+	// RefreshSessionsColumn is the table column denoting the refresh_sessions relation/edge.
+	RefreshSessionsColumn = "user_id"
 )
 
 // Columns holds all SQL columns for user fields.
 var Columns = []string{
 	FieldID,
 	FieldEmail,
-	FieldPassword,
+	FieldPasswordHash,
+	FieldRole,
+	FieldPermissions,
+	FieldResetTokenHash,
+	FieldResetTokenExpiresAt,
+	FieldCreatedAt,
+	FieldUpdatedAt,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -37,6 +67,16 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// DefaultRole holds the default value on creation for the "role" field.
+	DefaultRole string
+	// DefaultPermissions holds the default value on creation for the "permissions" field.
+	DefaultPermissions []string
+	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
+	DefaultCreatedAt func() time.Time
+	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
+	DefaultUpdatedAt func() time.Time
+	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
+	UpdateDefaultUpdatedAt func() time.Time
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() string
 )
@@ -54,7 +94,53 @@ func ByEmail(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldEmail, opts...).ToFunc()
 }
 
-// ByPassword orders the results by the password field.
-func ByPassword(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldPassword, opts...).ToFunc()
+// ByPasswordHash orders the results by the password_hash field.
+func ByPasswordHash(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPasswordHash, opts...).ToFunc()
+}
+
+// ByRole orders the results by the role field.
+func ByRole(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRole, opts...).ToFunc()
+}
+
+// ByResetTokenHash orders the results by the reset_token_hash field.
+func ByResetTokenHash(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldResetTokenHash, opts...).ToFunc()
+}
+
+// ByResetTokenExpiresAt orders the results by the reset_token_expires_at field.
+func ByResetTokenExpiresAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldResetTokenExpiresAt, opts...).ToFunc()
+}
+
+// ByCreatedAt orders the results by the created_at field.
+func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
+}
+
+// ByUpdatedAt orders the results by the updated_at field.
+func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByRefreshSessionsCount orders the results by refresh_sessions count.
+func ByRefreshSessionsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newRefreshSessionsStep(), opts...)
+	}
+}
+
+// ByRefreshSessions orders the results by refresh_sessions terms.
+func ByRefreshSessions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newRefreshSessionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newRefreshSessionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(RefreshSessionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, RefreshSessionsTable, RefreshSessionsColumn),
+	)
 }

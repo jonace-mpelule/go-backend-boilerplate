@@ -3,8 +3,10 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
@@ -18,9 +20,42 @@ type User struct {
 	ID string `json:"id,omitempty"`
 	// Email holds the value of the "email" field.
 	Email string `json:"email,omitempty"`
-	// Password holds the value of the "password" field.
-	Password     string `json:"password,omitempty"`
+	// PasswordHash holds the value of the "password_hash" field.
+	PasswordHash string `json:"password_hash,omitempty"`
+	// Role holds the value of the "role" field.
+	Role string `json:"role,omitempty"`
+	// Permissions holds the value of the "permissions" field.
+	Permissions []string `json:"permissions,omitempty"`
+	// ResetTokenHash holds the value of the "reset_token_hash" field.
+	ResetTokenHash *string `json:"reset_token_hash,omitempty"`
+	// ResetTokenExpiresAt holds the value of the "reset_token_expires_at" field.
+	ResetTokenExpiresAt *time.Time `json:"reset_token_expires_at,omitempty"`
+	// CreatedAt holds the value of the "created_at" field.
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	// UpdatedAt holds the value of the "updated_at" field.
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the UserQuery when eager-loading is set.
+	Edges        UserEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// UserEdges holds the relations/edges for other nodes in the graph.
+type UserEdges struct {
+	// RefreshSessions holds the value of the refresh_sessions edge.
+	RefreshSessions []*RefreshSession `json:"refresh_sessions,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// RefreshSessionsOrErr returns the RefreshSessions value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) RefreshSessionsOrErr() ([]*RefreshSession, error) {
+	if e.loadedTypes[0] {
+		return e.RefreshSessions, nil
+	}
+	return nil, &NotLoadedError{edge: "refresh_sessions"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -28,8 +63,12 @@ func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case user.FieldID, user.FieldEmail, user.FieldPassword:
+		case user.FieldPermissions:
+			values[i] = new([]byte)
+		case user.FieldID, user.FieldEmail, user.FieldPasswordHash, user.FieldRole, user.FieldResetTokenHash:
 			values[i] = new(sql.NullString)
+		case user.FieldResetTokenExpiresAt, user.FieldCreatedAt, user.FieldUpdatedAt:
+			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -57,11 +96,51 @@ func (_m *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Email = value.String
 			}
-		case user.FieldPassword:
+		case user.FieldPasswordHash:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field password", values[i])
+				return fmt.Errorf("unexpected type %T for field password_hash", values[i])
 			} else if value.Valid {
-				_m.Password = value.String
+				_m.PasswordHash = value.String
+			}
+		case user.FieldRole:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field role", values[i])
+			} else if value.Valid {
+				_m.Role = value.String
+			}
+		case user.FieldPermissions:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field permissions", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.Permissions); err != nil {
+					return fmt.Errorf("unmarshal field permissions: %w", err)
+				}
+			}
+		case user.FieldResetTokenHash:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field reset_token_hash", values[i])
+			} else if value.Valid {
+				_m.ResetTokenHash = new(string)
+				*_m.ResetTokenHash = value.String
+			}
+		case user.FieldResetTokenExpiresAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field reset_token_expires_at", values[i])
+			} else if value.Valid {
+				_m.ResetTokenExpiresAt = new(time.Time)
+				*_m.ResetTokenExpiresAt = value.Time
+			}
+		case user.FieldCreatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field created_at", values[i])
+			} else if value.Valid {
+				_m.CreatedAt = value.Time
+			}
+		case user.FieldUpdatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
+			} else if value.Valid {
+				_m.UpdatedAt = value.Time
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
@@ -74,6 +153,11 @@ func (_m *User) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (_m *User) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
+}
+
+// QueryRefreshSessions queries the "refresh_sessions" edge of the User entity.
+func (_m *User) QueryRefreshSessions() *RefreshSessionQuery {
+	return NewUserClient(_m.config).QueryRefreshSessions(_m)
 }
 
 // Update returns a builder for updating this User.
@@ -102,8 +186,30 @@ func (_m *User) String() string {
 	builder.WriteString("email=")
 	builder.WriteString(_m.Email)
 	builder.WriteString(", ")
-	builder.WriteString("password=")
-	builder.WriteString(_m.Password)
+	builder.WriteString("password_hash=")
+	builder.WriteString(_m.PasswordHash)
+	builder.WriteString(", ")
+	builder.WriteString("role=")
+	builder.WriteString(_m.Role)
+	builder.WriteString(", ")
+	builder.WriteString("permissions=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Permissions))
+	builder.WriteString(", ")
+	if v := _m.ResetTokenHash; v != nil {
+		builder.WriteString("reset_token_hash=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.ResetTokenExpiresAt; v != nil {
+		builder.WriteString("reset_token_expires_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	builder.WriteString("created_at=")
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("updated_at=")
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

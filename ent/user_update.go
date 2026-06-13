@@ -6,11 +6,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 	"github.com/username/project-name/ent/predicate"
+	"github.com/username/project-name/ent/refreshsession"
 	"github.com/username/project-name/ent/user"
 )
 
@@ -41,18 +44,105 @@ func (_u *UserUpdate) SetNillableEmail(v *string) *UserUpdate {
 	return _u
 }
 
-// SetPassword sets the "password" field.
-func (_u *UserUpdate) SetPassword(v string) *UserUpdate {
-	_u.mutation.SetPassword(v)
+// SetPasswordHash sets the "password_hash" field.
+func (_u *UserUpdate) SetPasswordHash(v string) *UserUpdate {
+	_u.mutation.SetPasswordHash(v)
 	return _u
 }
 
-// SetNillablePassword sets the "password" field if the given value is not nil.
-func (_u *UserUpdate) SetNillablePassword(v *string) *UserUpdate {
+// SetNillablePasswordHash sets the "password_hash" field if the given value is not nil.
+func (_u *UserUpdate) SetNillablePasswordHash(v *string) *UserUpdate {
 	if v != nil {
-		_u.SetPassword(*v)
+		_u.SetPasswordHash(*v)
 	}
 	return _u
+}
+
+// SetRole sets the "role" field.
+func (_u *UserUpdate) SetRole(v string) *UserUpdate {
+	_u.mutation.SetRole(v)
+	return _u
+}
+
+// SetNillableRole sets the "role" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableRole(v *string) *UserUpdate {
+	if v != nil {
+		_u.SetRole(*v)
+	}
+	return _u
+}
+
+// SetPermissions sets the "permissions" field.
+func (_u *UserUpdate) SetPermissions(v []string) *UserUpdate {
+	_u.mutation.SetPermissions(v)
+	return _u
+}
+
+// AppendPermissions appends value to the "permissions" field.
+func (_u *UserUpdate) AppendPermissions(v []string) *UserUpdate {
+	_u.mutation.AppendPermissions(v)
+	return _u
+}
+
+// SetResetTokenHash sets the "reset_token_hash" field.
+func (_u *UserUpdate) SetResetTokenHash(v string) *UserUpdate {
+	_u.mutation.SetResetTokenHash(v)
+	return _u
+}
+
+// SetNillableResetTokenHash sets the "reset_token_hash" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableResetTokenHash(v *string) *UserUpdate {
+	if v != nil {
+		_u.SetResetTokenHash(*v)
+	}
+	return _u
+}
+
+// ClearResetTokenHash clears the value of the "reset_token_hash" field.
+func (_u *UserUpdate) ClearResetTokenHash() *UserUpdate {
+	_u.mutation.ClearResetTokenHash()
+	return _u
+}
+
+// SetResetTokenExpiresAt sets the "reset_token_expires_at" field.
+func (_u *UserUpdate) SetResetTokenExpiresAt(v time.Time) *UserUpdate {
+	_u.mutation.SetResetTokenExpiresAt(v)
+	return _u
+}
+
+// SetNillableResetTokenExpiresAt sets the "reset_token_expires_at" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableResetTokenExpiresAt(v *time.Time) *UserUpdate {
+	if v != nil {
+		_u.SetResetTokenExpiresAt(*v)
+	}
+	return _u
+}
+
+// ClearResetTokenExpiresAt clears the value of the "reset_token_expires_at" field.
+func (_u *UserUpdate) ClearResetTokenExpiresAt() *UserUpdate {
+	_u.mutation.ClearResetTokenExpiresAt()
+	return _u
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (_u *UserUpdate) SetUpdatedAt(v time.Time) *UserUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
+}
+
+// AddRefreshSessionIDs adds the "refresh_sessions" edge to the RefreshSession entity by IDs.
+func (_u *UserUpdate) AddRefreshSessionIDs(ids ...string) *UserUpdate {
+	_u.mutation.AddRefreshSessionIDs(ids...)
+	return _u
+}
+
+// AddRefreshSessions adds the "refresh_sessions" edges to the RefreshSession entity.
+func (_u *UserUpdate) AddRefreshSessions(v ...*RefreshSession) *UserUpdate {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddRefreshSessionIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -60,8 +150,30 @@ func (_u *UserUpdate) Mutation() *UserMutation {
 	return _u.mutation
 }
 
+// ClearRefreshSessions clears all "refresh_sessions" edges to the RefreshSession entity.
+func (_u *UserUpdate) ClearRefreshSessions() *UserUpdate {
+	_u.mutation.ClearRefreshSessions()
+	return _u
+}
+
+// RemoveRefreshSessionIDs removes the "refresh_sessions" edge to RefreshSession entities by IDs.
+func (_u *UserUpdate) RemoveRefreshSessionIDs(ids ...string) *UserUpdate {
+	_u.mutation.RemoveRefreshSessionIDs(ids...)
+	return _u
+}
+
+// RemoveRefreshSessions removes "refresh_sessions" edges to RefreshSession entities.
+func (_u *UserUpdate) RemoveRefreshSessions(v ...*RefreshSession) *UserUpdate {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveRefreshSessionIDs(ids...)
+}
+
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (_u *UserUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -87,6 +199,14 @@ func (_u *UserUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (_u *UserUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
+		v := user.UpdateDefaultUpdatedAt()
+		_u.mutation.SetUpdatedAt(v)
+	}
+}
+
 func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	_spec := sqlgraph.NewUpdateSpec(user.Table, user.Columns, sqlgraph.NewFieldSpec(user.FieldID, field.TypeString))
 	if ps := _u.mutation.predicates; len(ps) > 0 {
@@ -99,8 +219,79 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.Email(); ok {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
 	}
-	if value, ok := _u.mutation.Password(); ok {
-		_spec.SetField(user.FieldPassword, field.TypeString, value)
+	if value, ok := _u.mutation.PasswordHash(); ok {
+		_spec.SetField(user.FieldPasswordHash, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Role(); ok {
+		_spec.SetField(user.FieldRole, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Permissions(); ok {
+		_spec.SetField(user.FieldPermissions, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedPermissions(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, user.FieldPermissions, value)
+		})
+	}
+	if value, ok := _u.mutation.ResetTokenHash(); ok {
+		_spec.SetField(user.FieldResetTokenHash, field.TypeString, value)
+	}
+	if _u.mutation.ResetTokenHashCleared() {
+		_spec.ClearField(user.FieldResetTokenHash, field.TypeString)
+	}
+	if value, ok := _u.mutation.ResetTokenExpiresAt(); ok {
+		_spec.SetField(user.FieldResetTokenExpiresAt, field.TypeTime, value)
+	}
+	if _u.mutation.ResetTokenExpiresAtCleared() {
+		_spec.ClearField(user.FieldResetTokenExpiresAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.UpdatedAt(); ok {
+		_spec.SetField(user.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if _u.mutation.RefreshSessionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.RefreshSessionsTable,
+			Columns: []string{user.RefreshSessionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(refreshsession.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedRefreshSessionsIDs(); len(nodes) > 0 && !_u.mutation.RefreshSessionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.RefreshSessionsTable,
+			Columns: []string{user.RefreshSessionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(refreshsession.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RefreshSessionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.RefreshSessionsTable,
+			Columns: []string{user.RefreshSessionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(refreshsession.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -136,23 +327,131 @@ func (_u *UserUpdateOne) SetNillableEmail(v *string) *UserUpdateOne {
 	return _u
 }
 
-// SetPassword sets the "password" field.
-func (_u *UserUpdateOne) SetPassword(v string) *UserUpdateOne {
-	_u.mutation.SetPassword(v)
+// SetPasswordHash sets the "password_hash" field.
+func (_u *UserUpdateOne) SetPasswordHash(v string) *UserUpdateOne {
+	_u.mutation.SetPasswordHash(v)
 	return _u
 }
 
-// SetNillablePassword sets the "password" field if the given value is not nil.
-func (_u *UserUpdateOne) SetNillablePassword(v *string) *UserUpdateOne {
+// SetNillablePasswordHash sets the "password_hash" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillablePasswordHash(v *string) *UserUpdateOne {
 	if v != nil {
-		_u.SetPassword(*v)
+		_u.SetPasswordHash(*v)
 	}
 	return _u
+}
+
+// SetRole sets the "role" field.
+func (_u *UserUpdateOne) SetRole(v string) *UserUpdateOne {
+	_u.mutation.SetRole(v)
+	return _u
+}
+
+// SetNillableRole sets the "role" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableRole(v *string) *UserUpdateOne {
+	if v != nil {
+		_u.SetRole(*v)
+	}
+	return _u
+}
+
+// SetPermissions sets the "permissions" field.
+func (_u *UserUpdateOne) SetPermissions(v []string) *UserUpdateOne {
+	_u.mutation.SetPermissions(v)
+	return _u
+}
+
+// AppendPermissions appends value to the "permissions" field.
+func (_u *UserUpdateOne) AppendPermissions(v []string) *UserUpdateOne {
+	_u.mutation.AppendPermissions(v)
+	return _u
+}
+
+// SetResetTokenHash sets the "reset_token_hash" field.
+func (_u *UserUpdateOne) SetResetTokenHash(v string) *UserUpdateOne {
+	_u.mutation.SetResetTokenHash(v)
+	return _u
+}
+
+// SetNillableResetTokenHash sets the "reset_token_hash" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableResetTokenHash(v *string) *UserUpdateOne {
+	if v != nil {
+		_u.SetResetTokenHash(*v)
+	}
+	return _u
+}
+
+// ClearResetTokenHash clears the value of the "reset_token_hash" field.
+func (_u *UserUpdateOne) ClearResetTokenHash() *UserUpdateOne {
+	_u.mutation.ClearResetTokenHash()
+	return _u
+}
+
+// SetResetTokenExpiresAt sets the "reset_token_expires_at" field.
+func (_u *UserUpdateOne) SetResetTokenExpiresAt(v time.Time) *UserUpdateOne {
+	_u.mutation.SetResetTokenExpiresAt(v)
+	return _u
+}
+
+// SetNillableResetTokenExpiresAt sets the "reset_token_expires_at" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableResetTokenExpiresAt(v *time.Time) *UserUpdateOne {
+	if v != nil {
+		_u.SetResetTokenExpiresAt(*v)
+	}
+	return _u
+}
+
+// ClearResetTokenExpiresAt clears the value of the "reset_token_expires_at" field.
+func (_u *UserUpdateOne) ClearResetTokenExpiresAt() *UserUpdateOne {
+	_u.mutation.ClearResetTokenExpiresAt()
+	return _u
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (_u *UserUpdateOne) SetUpdatedAt(v time.Time) *UserUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
+}
+
+// AddRefreshSessionIDs adds the "refresh_sessions" edge to the RefreshSession entity by IDs.
+func (_u *UserUpdateOne) AddRefreshSessionIDs(ids ...string) *UserUpdateOne {
+	_u.mutation.AddRefreshSessionIDs(ids...)
+	return _u
+}
+
+// AddRefreshSessions adds the "refresh_sessions" edges to the RefreshSession entity.
+func (_u *UserUpdateOne) AddRefreshSessions(v ...*RefreshSession) *UserUpdateOne {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddRefreshSessionIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
 func (_u *UserUpdateOne) Mutation() *UserMutation {
 	return _u.mutation
+}
+
+// ClearRefreshSessions clears all "refresh_sessions" edges to the RefreshSession entity.
+func (_u *UserUpdateOne) ClearRefreshSessions() *UserUpdateOne {
+	_u.mutation.ClearRefreshSessions()
+	return _u
+}
+
+// RemoveRefreshSessionIDs removes the "refresh_sessions" edge to RefreshSession entities by IDs.
+func (_u *UserUpdateOne) RemoveRefreshSessionIDs(ids ...string) *UserUpdateOne {
+	_u.mutation.RemoveRefreshSessionIDs(ids...)
+	return _u
+}
+
+// RemoveRefreshSessions removes "refresh_sessions" edges to RefreshSession entities.
+func (_u *UserUpdateOne) RemoveRefreshSessions(v ...*RefreshSession) *UserUpdateOne {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveRefreshSessionIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -170,6 +469,7 @@ func (_u *UserUpdateOne) Select(field string, fields ...string) *UserUpdateOne {
 
 // Save executes the query and returns the updated User entity.
 func (_u *UserUpdateOne) Save(ctx context.Context) (*User, error) {
+	_u.defaults()
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -192,6 +492,14 @@ func (_u *UserUpdateOne) Exec(ctx context.Context) error {
 func (_u *UserUpdateOne) ExecX(ctx context.Context) {
 	if err := _u.Exec(ctx); err != nil {
 		panic(err)
+	}
+}
+
+// defaults sets the default values of the builder before save.
+func (_u *UserUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
+		v := user.UpdateDefaultUpdatedAt()
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
@@ -224,8 +532,79 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	if value, ok := _u.mutation.Email(); ok {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
 	}
-	if value, ok := _u.mutation.Password(); ok {
-		_spec.SetField(user.FieldPassword, field.TypeString, value)
+	if value, ok := _u.mutation.PasswordHash(); ok {
+		_spec.SetField(user.FieldPasswordHash, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Role(); ok {
+		_spec.SetField(user.FieldRole, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Permissions(); ok {
+		_spec.SetField(user.FieldPermissions, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedPermissions(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, user.FieldPermissions, value)
+		})
+	}
+	if value, ok := _u.mutation.ResetTokenHash(); ok {
+		_spec.SetField(user.FieldResetTokenHash, field.TypeString, value)
+	}
+	if _u.mutation.ResetTokenHashCleared() {
+		_spec.ClearField(user.FieldResetTokenHash, field.TypeString)
+	}
+	if value, ok := _u.mutation.ResetTokenExpiresAt(); ok {
+		_spec.SetField(user.FieldResetTokenExpiresAt, field.TypeTime, value)
+	}
+	if _u.mutation.ResetTokenExpiresAtCleared() {
+		_spec.ClearField(user.FieldResetTokenExpiresAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.UpdatedAt(); ok {
+		_spec.SetField(user.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if _u.mutation.RefreshSessionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.RefreshSessionsTable,
+			Columns: []string{user.RefreshSessionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(refreshsession.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedRefreshSessionsIDs(); len(nodes) > 0 && !_u.mutation.RefreshSessionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.RefreshSessionsTable,
+			Columns: []string{user.RefreshSessionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(refreshsession.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RefreshSessionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.RefreshSessionsTable,
+			Columns: []string{user.RefreshSessionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(refreshsession.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &User{config: _u.config}
 	_spec.Assign = _node.assignValues
